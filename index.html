@@ -1,280 +1,258 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>旅遊行程管理器 Pro</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Japan Trip 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script
-      defer
-      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
-    ></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/826/826070.png">
     <style>
-      [x-cloak] {
-        display: none !important;
-      }
-      .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-      }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; background: #F9FBFC; }
+        [x-cloak] { display: none !important; }
+        .japanese-card { background: #FFFFFF; border: 1px solid #EEF2F5; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04); }
+        .active-tab { background: #2563EB; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
     </style>
-  </head>
-  <body class="bg-gray-100 font-sans">
-    <div
-      class="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col"
-      x-data="itineraryApp()"
-      x-init="$watch('schedule', value => localStorage.setItem('travel_data', JSON.stringify(value)))"
-      x-cloak
-    >
-      <header
-        class="bg-indigo-600 text-white p-6 sticky top-0 z-20 shadow-md flex justify-between items-center"
-      >
-        <div>
-          <h1 class="text-xl font-bold">我的旅遊助手</h1>
-          <p class="text-indigo-100 text-xs">資料已自動儲存至瀏覽器</p>
-        </div>
-        <button
-          @click="openModal()"
-          class="bg-white text-indigo-600 p-2 rounded-full shadow hover:bg-indigo-50 transition"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
-      </header>
+</head>
 
-      <nav
-        class="flex overflow-x-auto bg-white border-b sticky top-[84px] z-10 scrollbar-hide"
-      >
-        <template x-for="n in 5" :key="n">
-          <button
-            @click="activeDay = n"
-            :class="activeDay === n ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400'"
-            class="flex-1 min-w-[70px] py-4 text-center border-b-2 font-bold transition-colors"
-            x-text="'Day ' + n"
-          ></button>
-        </template>
-      </nav>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('PWA Ready!', reg))
+                .catch(err => console.log('PWA Failed', err));
+        });
+    }
+</script>
 
-      <main class="p-4 flex-grow">
-        <template x-if="currentEvents.length === 0">
-          <div class="text-center py-20 text-gray-400">
-            <p>本日尚無行程</p>
-            <button @click="openModal()" class="mt-2 text-indigo-500 underline">
-              點此新增
-            </button>
-          </div>
-        </template>
+<body>
 
-        <template x-for="(item, index) in currentEvents" :key="index">
-          <div
-            class="mb-4 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm"
-          >
-            <div class="p-4">
-              <div class="flex justify-between items-start">
-                <span
-                  class="text-indigo-600 font-mono font-bold"
-                  x-text="item.time"
-                ></span>
-                <div class="flex gap-2">
-                  <button
-                    @click="editEvent(index)"
-                    class="text-gray-400 hover:text-blue-500"
-                  >
-                    編輯
-                  </button>
-                  <button
-                    @click="deleteEvent(index)"
-                    class="text-gray-400 hover:text-red-500"
-                  >
-                    刪除
-                  </button>
-                </div>
-              </div>
-              <h3
-                class="text-lg font-bold text-gray-800 mt-1"
-                x-text="item.location"
-              ></h3>
-              <p class="text-gray-500 text-sm mt-1" x-text="item.note"></p>
-
-              <a
-                :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.location)"
-                target="_blank"
-                class="mt-3 inline-flex items-center text-xs bg-gray-100 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-200"
-              >
-                📍 在 Google Maps 查看
-              </a>
-            </div>
-          </div>
-        </template>
-      </main>
-
-      <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-        x-show="showModal"
-        x-transition
-      >
-        <div
-          class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden"
-          @click.away="showModal = false"
-        >
-          <div class="p-6">
-            <h2
-              class="text-xl font-bold mb-4"
-              x-text="isEditing ? '編輯行程' : '新增行程'"
-            ></h2>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700"
-                  >地點名稱</label
-                >
-                <input
-                  type="text"
-                  x-model="form.location"
-                  class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div class="grid grid-cols-2 gap-4">
+    <div class="max-w-md mx-auto min-h-screen flex flex-col" x-data="travelApp()" x-init="init()" x-cloak>
+        
+        <header class="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-30 border-b border-gray-100">
+            <div class="flex justify-between items-center">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >時間</label
-                  >
-                  <input
-                    type="time"
-                    x-model="form.time"
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  />
+                    <p class="text-[10px] text-blue-600 font-black tracking-[0.2em] uppercase mb-1" x-text="currentDateDisplay"></p>
+                    <h1 class="text-2xl font-bold text-gray-900" x-text="currentCity"></h1>
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700"
-                    >日期</label
-                  >
-                  <select
-                    x-model.number="form.day"
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 text-sm"
-                  >
-                    <option value="1">Day 1</option>
-                    <option value="2">Day 2</option>
-                    <option value="3">Day 3</option>
-                    <option value="4">Day 4</option>
-                    <option value="5">Day 5</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700"
-                  >備註 (交通/美食等)</label
-                >
-                <textarea
-                  x-model="form.note"
-                  rows="2"
-                  class="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                ></textarea>
-              </div>
+                <button @click="openAddModal" class="bg-gray-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center active:scale-90 transition">
+                    <i class="fas fa-plus"></i>
+                </button>
             </div>
-          </div>
-          <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
-            <button
-              @click="showModal = false"
-              class="text-gray-500 hover:text-gray-700 px-4 py-2"
-            >
-              取消
-            </button>
-            <button
-              @click="saveEvent"
-              class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700"
-              x-text="isEditing ? '更新' : '新增'"
-            ></button>
-          </div>
+            
+            <div class="flex gap-3 mt-6 overflow-x-auto pb-1">
+                <template x-for="n in 10" :key="n">
+                    <button @click="activeDay = n; fetchWeather()" 
+                        :class="activeDay === n ? 'active-tab' : 'bg-white text-gray-400 border border-gray-100'"
+                        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap"
+                        x-text="getDateForDay(n)">
+                    </button>
+                </template>
+            </div>
+        </header>
+
+        <main class="flex-grow px-5 py-6 mb-24">
+            
+            <div x-show="currentTab === 'itinerary'" x-transition>
+                <template x-if="currentDayEvents.length === 0">
+                    <div class="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                        <i class="fas fa-map-marked-alt text-gray-300 text-4xl mb-3"></i>
+                        <p class="text-gray-400 text-sm italic">點擊上方 + 開始規劃本日行程</p>
+                    </div>
+                </template>
+
+                <template x-for="(item, index) in currentDayEvents" :key="index">
+                    <div class="mb-6 flex gap-4">
+                        <div class="flex flex-col items-center">
+                            <span class="text-[11px] font-black text-gray-400" x-text="item.time"></span>
+                            <div class="w-px h-full bg-blue-100 my-2"></div>
+                        </div>
+                        
+                        <div class="flex-grow japanese-card rounded-[2rem] p-5 relative">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-blue-50 text-blue-600 text-[10px] px-2.5 py-1 rounded-lg font-black" x-text="item.category"></span>
+                                <div class="flex gap-4 text-gray-300 text-xs">
+                                    <i @click="editEvent(index)" class="fas fa-pen cursor-pointer"></i>
+                                    <i @click="deleteEvent(index)" class="fas fa-trash cursor-pointer"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-gray-900 leading-tight" x-text="item.location"></h3>
+                            <p class="text-xs text-gray-400 mt-2 font-medium" x-text="item.note"></p>
+                            
+                            <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.location)" 
+                               target="_blank"
+                               class="mt-4 flex items-center justify-center gap-2 bg-gray-900 text-white text-[11px] font-bold py-3 rounded-2xl shadow-lg shadow-gray-200">
+                                <i class="fa-solid fa-location-dot"></i> 開啟 Google Maps 導航
+                            </a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div x-show="currentTab === 'weather'" x-transition>
+                <div class="bg-white p-8 rounded-[2.5rem] japanese-shadow border border-gray-50 text-center">
+                    <p class="text-xs font-black text-blue-500 uppercase tracking-widest mb-2" x-text="currentCity + ' 實時天氣'"></p>
+                    <div class="flex justify-center items-center gap-4 my-6">
+                        <i :class="weather.icon" class="text-6xl text-blue-600"></i>
+                        <span class="text-6xl font-light tracking-tighter" x-text="Math.round(weather.temp) + '°'"></span>
+                    </div>
+                    <p class="text-lg font-bold text-gray-800" x-text="weather.desc"></p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-gray-50">
+                        <div class="bg-blue-50/50 p-4 rounded-2xl">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">濕度</p>
+                            <p class="text-lg font-black text-blue-600" x-text="weather.humidity + '%'"></p>
+                        </div>
+                        <div class="bg-blue-50/50 p-4 rounded-2xl">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">風速</p>
+                            <p class="text-lg font-black text-blue-600" x-text="weather.wind + ' km/h'"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-xl border-t border-gray-100 pb-8 pt-3 z-40">
+            <div class="flex justify-around items-center">
+                <button @click="currentTab = 'itinerary'" :class="currentTab === 'itinerary' ? 'text-blue-600' : 'text-gray-300'" class="flex flex-col items-center gap-1">
+                    <i class="fas fa-calendar-alt text-xl"></i>
+                    <span class="text-[9px] font-black uppercase">行程</span>
+                </button>
+                <button @click="currentTab = 'weather'" :class="currentTab === 'weather' ? 'text-blue-600' : 'text-gray-300'" class="flex flex-col items-center gap-1">
+                    <i class="fas fa-cloud-sun text-xl"></i>
+                    <span class="text-[9px] font-black uppercase">天氣</span>
+                </button>
+            </div>
+        </footer>
+
+        <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm" x-show="showModal" x-transition>
+            <div class="bg-white w-full max-w-md rounded-t-[3rem] p-8 pb-12 shadow-2xl" @click.away="showModal = false">
+                <div class="w-10 h-1 bg-gray-100 rounded-full mx-auto mb-8"></div>
+                <h2 class="text-2xl font-black mb-8">新增行程 Day <span x-text="form.day"></span></h2>
+                <div class="space-y-6">
+                    <div class="border-b border-gray-100 pb-2">
+                        <label class="text-[10px] font-black text-gray-300 uppercase tracking-widest">地點</label>
+                        <input type="text" x-model="form.location" class="w-full bg-transparent border-none focus:ring-0 text-xl font-bold" placeholder="目的地名稱">
+                    </div>
+                    <div class="border-b border-gray-100 pb-2">
+                        <label class="text-[10px] font-black text-gray-300 uppercase tracking-widest">備註</label>
+                        <input type="text" x-model="form.note" class="w-full bg-transparent border-none focus:ring-0 text-xl font-bold" placeholder="備註">
+                    </div>
+                    <div class="flex gap-6">
+                        <div class="flex-1 border-b border-gray-100 pb-2">
+                            <label class="text-[10px] font-black text-gray-300 uppercase tracking-widest">時間</label>
+                            <input type="time" x-model="form.time" class="w-full bg-transparent border-none focus:ring-0 font-bold">
+                        </div>
+                        <div class="flex-1 border-b border-gray-100 pb-2">
+                            <label class="text-[10px] font-black text-gray-300 uppercase tracking-widest">分類</label>
+                            <select x-model="form.category" class="w-full bg-transparent border-none focus:ring-0 font-bold">
+                                <option>景點</option><option>美食</option><option>交通</option><option>住宿</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button @click="saveEvent" class="w-full bg-blue-600 text-white py-5 rounded-[2rem] font-black shadow-xl shadow-blue-100 active:scale-95 transition-all mt-4">確認加入</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <script>
-      function itineraryApp() {
-        const savedData = localStorage.getItem("travel_data");
-        return {
-          activeDay: 1,
-          showModal: false,
-          isEditing: false,
-          editIndex: null,
-          // 表單資料
-          form: { day: 1, time: "", location: "", note: "" },
-          // 行程資料 (嘗試從 localStorage 讀取，否則給初始值)
-          schedule: savedData
-            ? JSON.parse(savedData)
-            : [
-                {
-                  day: 1,
-                  time: "10:00",
-                  location: "東京車站",
-                  note: "領取 JR Pass",
+        function travelApp() {
+            return {
+                currentTab: 'itinerary',
+                activeDay: 1,
+                showModal: false,
+                isEditing: false,
+                weather: { temp: 0, desc: '載入中', humidity: 0, wind: 0, icon: 'fas fa-spinner fa-spin' },
+                form: { day: 1, time: '09:00', location: '', note: '', category: '景點' },
+                
+                // 初始化資料：2026/02/10 - 2026/02/19
+                schedule: JSON.parse(localStorage.getItem('japan_trip_2026')) || [
+                    { day: 1, time: '11:00', location: '關西國際機場', note: '抵達並購買 HARUKA 直達京都', category: '交通' },
+                    { day: 1, time: '14:00', location: '京都車站', note: '飯店 Check-in (M\'s Plus)', category: '住宿' },
+                    { day: 4, time: '10:00', location: '大阪城公園', note: '從京都移至大阪', category: '景點' },
+                    { day: 7, time: '09:00', location: '高松 栗林公園', note: '前往四國', category: '景點' }
+                ],
+
+                init() {
+                    this.fetchWeather();
                 },
-                { day: 1, time: "12:00", location: "銀座", note: "吃拉麵" },
-              ],
 
-          get currentEvents() {
-            return this.schedule
-              .filter((e) => e.day === this.activeDay)
-              .sort((a, b) => a.time.localeCompare(b.time));
-          },
+                get currentDateDisplay() {
+                    const start = new Date(2026, 1, 10); // 2月是 Index 1
+                    start.setDate(start.getDate() + (this.activeDay - 1));
+                    return `${start.getMonth() + 1}/${start.getDate()} (Day ${this.activeDay})`;
+                },
 
-          openModal() {
-            this.isEditing = false;
-            this.form = {
-              day: this.activeDay,
-              time: "12:00",
-              location: "",
-              note: "",
-            };
-            this.showModal = true;
-          },
+                getDateForDay(day) {
+                    const start = new Date(2026, 1, 10);
+                    start.setDate(start.getDate() + (day - 1));
+                    return `${start.getMonth() + 1}/${start.getDate()} (Day ${day})`;
+                },
 
-          saveEvent() {
-            if (!this.form.location) return alert("請輸入地點");
+                get currentCity() {
+                    if (this.activeDay <= 3) return '京都 · Kyoto';
+                    if (this.activeDay <= 6) return '大阪 · Osaka';
+                    return '四國 · Shikoku';
+                },
 
-            if (this.isEditing) {
-              // 編輯邏輯
-              const originalEvent = this.currentEvents[this.editIndex];
-              const globalIndex = this.schedule.findIndex(
-                (e) => e === originalEvent
-              );
-              this.schedule[globalIndex] = { ...this.form };
-            } else {
-              // 新增邏輯
-              this.schedule.push({ ...this.form });
+                get currentDayEvents() {
+                    return this.schedule
+                        .filter(e => e.day === this.activeDay)
+                        .sort((a, b) => a.time.localeCompare(b.time));
+                },
+
+                async fetchWeather() {
+                    const coords = {
+                        '京都 · Kyoto': { lat: 35.0116, lon: 135.7681 },
+                        '大阪 · Osaka': { lat: 34.6937, lon: 135.5023 },
+                        '四國 · Shikoku': { lat: 34.3427, lon: 134.0465 } // 以高松為例
+                    };
+                    const { lat, lon } = coords[this.currentCity];
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`);
+                        const data = await res.json();
+                        const c = data.current;
+                        this.weather = {
+                            temp: c.temperature_2m,
+                            humidity: c.relative_humidity_2m,
+                            wind: c.wind_speed_10m,
+                            ...this.getWeatherInfo(c.weather_code)
+                        };
+                    } catch (e) { this.weather.desc = "讀取失敗"; }
+                },
+
+                getWeatherInfo(code) {
+                    const map = { 0: ['晴朗', 'fas fa-sun'], 1: ['晴間多雲', 'fas fa-cloud-sun'], 2: ['多雲', 'fas fa-cloud'], 3: ['陰天', 'fas fa-cloud'], 61: ['雨', 'fas fa-cloud-showers-heavy'] };
+                    return { desc: map[code]?.[0] || '多雲時晴', icon: map[code]?.[1] || 'fas fa-cloud-sun' };
+                },
+
+                openAddModal() {
+                    this.isEditing = false;
+                    this.form = { day: this.activeDay, time: '10:00', location: '', note: '', category: '景點' };
+                    this.showModal = true;
+                },
+
+                saveEvent() {
+                    if (!this.form.location) return;
+                    this.schedule.push({ ...this.form });
+                    localStorage.setItem('japan_trip_2026', JSON.stringify(this.schedule));
+                    this.showModal = false;
+                },
+
+                deleteEvent(index) {
+                    if (confirm('刪除此行程？')) {
+                        const target = this.currentDayEvents[index];
+                        this.schedule = this.schedule.filter(e => e !== target);
+                        localStorage.setItem('japan_trip_2026', JSON.stringify(this.schedule));
+                    }
+                }
             }
-
-            this.activeDay = this.form.day;
-            this.showModal = false;
-          },
-
-          editEvent(index) {
-            this.isEditing = true;
-            this.editIndex = index;
-            const event = this.currentEvents[index];
-            this.form = { ...event };
-            this.showModal = true;
-          },
-
-          deleteEvent(index) {
-            if (confirm("確定要刪除此行程嗎？")) {
-              const eventToDelete = this.currentEvents[index];
-              this.schedule = this.schedule.filter((e) => e !== eventToDelete);
-            }
-          },
-        };
-      }
+        }
     </script>
-  </body>
+</body>
 </html>
