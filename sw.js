@@ -1,22 +1,19 @@
-const CACHE_NAME = 'travel-app-v1';
+const CACHE_NAME = 'travel-japan';
 const ASSETS = [
-    './',
-    './index.html',
+    '/manifest.json',
+    '/screen/index.html',
+    '/css/style.css',
+    '/js/app.js',
+    '/js/weather.js',
     'https://cdn.tailwindcss.com',
     'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
-// 安裝並快取資源
 self.addEventListener('install', (e) => {
-    e.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-    );
+    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
 });
 
-// 攔截請求，優先從快取讀取
 self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then((res) => res || fetch(e.request))
-    );
+    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
