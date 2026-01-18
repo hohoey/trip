@@ -48,7 +48,9 @@ export const AddEventModal = ({ isOpen, onClose, onAdd, activeDay }: Props) => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black italic text-gray-900">
             新增行程{" "}
-            <span className="text-blue-600 text-xs ml-2">Day {activeDay}</span>
+            <span className="text-blue-600 text-xs ml-2">
+              in Day {activeDay}
+            </span>
           </h2>
           {/* 右上角叉叉按鈕 */}
           <button
@@ -60,38 +62,37 @@ export const AddEventModal = ({ isOpen, onClose, onAdd, activeDay }: Props) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">
-                Time *
-              </label>
-              <input
-                type="time"
-                required
-                value={formData.time}
-                onChange={(e) =>
-                  setFormData({ ...formData, time: e.target.value })
-                }
-                className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 font-bold focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-2">
-                Category
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-                className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 font-bold focus:ring-2 focus:ring-blue-500 appearance-none"
-              >
-                <option>景點</option>
-                <option>美食</option>
-                <option>交通</option>
-                <option>購物</option>
-              </select>
-            </div>
+          <div>
+            <label className="text-[10px] font-black text-gray-400 uppercase ml-2">
+              Time *
+            </label>
+            <input
+              type="time"
+              required
+              value={formData.time}
+              onChange={(e) =>
+                setFormData({ ...formData, time: e.target.value })
+              }
+              className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 font-bold focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-black text-gray-400 uppercase ml-2">
+              Category
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+              className="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1 font-bold focus:ring-2 focus:ring-blue-500 appearance-none"
+            >
+              <option>景點</option>
+              <option>美食</option>
+              <option>交通</option>
+              <option>購物</option>
+              <option>住宿</option>
+            </select>
           </div>
 
           <div>

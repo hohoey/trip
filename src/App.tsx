@@ -220,6 +220,7 @@ export default function App() {
                     美食: "text-[#D35400] bg-orange-50 border-[#D35400]/20",
                     交通: "text-slate-600 bg-slate-100 border-slate-200",
                     購物: "text-indigo-600 bg-indigo-50 border-indigo-100",
+                    住宿: "text-emerald-600 bg-emerald-50 border-emerald-100",
                   };
 
                   return (
@@ -318,66 +319,109 @@ export default function App() {
 
         {/* 2. 天氣分頁 (Weather) */}
         {currentTab === "weather" && (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="flex justify-between items-center mb-6 px-2">
-              <h2 className="text-2xl font-black text-[#1A5276]">地區氣候</h2>
+          <div className="space-y-6 animate-fadeIn pb-10">
+            <div className="flex justify-between items-center px-2">
+              <h2 className="text-2xl font-black text-[#1A5276]">
+                地區氣候詳情
+              </h2>
               <button
                 onClick={() => updateWeather()}
-                className="w-12 h-12 bg-white rounded-2xl shadow-sm text-[#1A5276] flex items-center justify-center active:bg-blue-50 transition-colors border border-blue-50"
+                className="w-12 h-12 bg-white rounded-2xl shadow-sm text-[#1A5276] flex items-center justify-center border border-blue-50"
               >
                 <i
-                  className={`fas fa-arrows-rotate text-lg ${loading ? "animate-spin" : ""}`}
+                  className={`fas fa-arrows-rotate ${loading ? "animate-spin" : ""}`}
                 ></i>
               </button>
             </div>
 
             {loading ? (
-              <div className="py-32 text-center">
-                <div className="w-12 h-12 border-4 border-blue-100 border-t-[#1A5276] rounded-full animate-spin mx-auto mb-6"></div>
-                <p className="text-[#1A5276] font-black text-[10px] tracking-widest opacity-60">
-                  資料載入中...
-                </p>
+              <div className="py-32 text-center text-[#1A5276] font-black opacity-40">
+                LOADING...
               </div>
             ) : (
-              <div className="grid gap-5">
+              <div className="grid gap-6">
                 {Object.entries(weatherMap).map(([cityName, data]) => (
                   <div
                     key={cityName}
-                    className="bg-white border border-blue-100 rounded-[2.5rem] p-7 shadow-[0_10px_25px_-5px_rgba(26,82,118,0.08)] relative overflow-hidden"
+                    className="bg-white border border-blue-100 rounded-[2.5rem] p-7 shadow-xl relative overflow-hidden"
                   >
-                    {/* 背景裝飾圖標 - 稍微加深透明度確保質感 */}
-                    <div
-                      className={`absolute -right-4 -bottom-4 opacity-[0.07] text-8xl ${data.color}`}
-                    >
-                      <i className={`fas ${data.icon}`}></i>
-                    </div>
-
-                    <div className="flex justify-between items-center relative z-10">
-                      <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 bg-blue-50 rounded-3xl flex items-center justify-center text-3xl shadow-inner">
+                    {/* 標題與主要溫度 */}
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
                           <i className={`fas ${data.icon} ${data.color}`}></i>
                         </div>
                         <div>
                           <h3 className="text-xl font-black text-slate-900">
                             {cityName}
                           </h3>
-                          <p className="text-[10px] font-black text-[#1A5276] uppercase tracking-widest mt-1 opacity-70">
+
+                          <p className="text-[10px] font-black text-[#1A5276] uppercase tracking-widest">
                             {data.desc}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-5xl font-black text-slate-900 tracking-tighter tabular-nums flex items-start justify-end">
+                        <p className="text-[10px] font-bold text-slate-400">
+                          現時
+                        </p>
+                        <div className="text-5xl font-black text-slate-900 tracking-tighter tabular-nums flex">
                           {data.temp}
                           <span className="text-2xl text-blue-300 mt-1">°</span>
                         </div>
-                        <div className="mt-1 text-[10px] font-black uppercase tracking-tighter flex gap-2 justify-end">
+                        <p className="text-[10px] font-bold text-slate-400">
+                          體感 {data.feelsLike}°
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 詳細資訊網格 - 顯示所有新抓取的資料 */}
+                    <div className="grid grid-cols-2 gap-3 relative z-10">
+                      {/* 高低溫 */}
+                      <div className="bg-slate-50/80 rounded-2xl p-4 border border-white">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">
+                          溫度範圍
+                        </p>
+                        <div className="flex justify-between items-center font-black text-[12px]">
                           <span className="text-red-500">
                             最高: {data.maxTemp}°
                           </span>
                           <span className="text-blue-500">
                             最低: {data.minTemp}°
                           </span>
+                        </div>
+                      </div>
+
+                      {/* 降雨機率 */}
+                      <div className="bg-slate-50/80 rounded-2xl p-4 border border-white">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">
+                          降雨機率
+                        </p>
+                        <div className="flex items-center gap-2 font-black text-[12px] text-blue-600">
+                          <i className="fas fa-droplet text-[10px]"></i>
+                          {data.rainProb}%
+                        </div>
+                      </div>
+
+                      {/* 風速 */}
+                      <div className="bg-slate-50/80 rounded-2xl p-4 border border-white">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">
+                          風速
+                        </p>
+                        <div className="flex items-center gap-2 font-black text-[12px] text-slate-700">
+                          <i className="fas fa-wind text-[10px]"></i>
+                          {data.wind} km/h
+                        </div>
+                      </div>
+
+                      {/* 日出日落 */}
+                      <div className="bg-slate-50/80 rounded-2xl p-4 border border-white">
+                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">
+                          日出 / 日落
+                        </p>
+                        <div className="flex items-center gap-2 font-black text-[10px] text-orange-600">
+                          <i className="fas fa-sun text-[10px]"></i>
+                          {data.sunrise} / {data.sunset}
                         </div>
                       </div>
                     </div>
