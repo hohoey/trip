@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@layer components {
+  .japanese-card {
+    @apply bg-white border border-gray-50 shadow-sm rounded-3xl p-5 relative transition-all active:scale-[0.98];
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
