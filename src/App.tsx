@@ -19,6 +19,56 @@ export default function App() {
     "2/18",
     "2/19",
   ];
+
+  const prefectures = [
+    "北海道",
+    "青森県",
+    "岩手県",
+    "宮城県",
+    "秋田県",
+    "山形県",
+    "福島県",
+    "茨城県",
+    "栃木県",
+    "群馬県",
+    "埼玉県",
+    "千葉県",
+    "東京都",
+    "神奈川県",
+    "新潟県",
+    "富山県",
+    "石川県",
+    "福井県",
+    "山梨県",
+    "長野県",
+    "岐阜県",
+    "静岡県",
+    "愛知県",
+    "三重県",
+    "滋賀県",
+    "京都府",
+    "大阪府",
+    "兵庫県",
+    "奈良県",
+    "和歌山県",
+    "鳥取県",
+    "島根県",
+    "岡山県",
+    "広島県",
+    "山口県",
+    "徳島県",
+    "香川県",
+    "愛媛県",
+    "高知県",
+    "福岡県",
+    "佐賀県",
+    "長崎県",
+    "熊本県",
+    "大分県",
+    "宮崎県",
+    "鹿児島県",
+    "沖縄県",
+  ];
   const [activeDay, setActiveDay] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -42,8 +92,28 @@ export default function App() {
   const currentEvents = useMemo(() => {
     return schedule
       .filter((e) => e.day === activeDay)
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }, [schedule, activeDay]);
+      .sort((a, b) => {
+        const timeA = parseInt(a.time.replace(":", ""), 10);
+        const timeB = parseInt(b.time.replace(":", ""), 10);
+        return timeA - timeB;
+      });
+  }, [schedule, activeDay]); // 僅在行程內容或切換天數時才重新排序
+
+  const travelRoute = useMemo(() => {
+    if (currentEvents.length === 0) return { start: "京都", end: "京都" };
+
+    const getArea = (item: TripEvent) => {
+      const text = (item.address || "") + (item.location || "");
+      const found = prefectures.find((p) => text.includes(p));
+      // 如果地址沒寫縣市，就回傳地點名稱的前兩個字，或是預設值
+      return found || item.location.substring(0, 2);
+    };
+
+    return {
+      start: getArea(currentEvents[0]),
+      end: getArea(currentEvents[currentEvents.length - 1]),
+    };
+  }, [currentEvents]);
 
   const handleExport = () => {
     if (schedule.length === 0) {
@@ -185,27 +255,47 @@ export default function App() {
         {/* 1. 行程分頁 (Itinerary) */}
         {currentTab === "itinerary" && (
           <div className="animate-fadeIn">
-            {/* --- 今日行程簡介 Summary Banner */}
+            {/* --- 今日行程簡介 Summary Banner --- */}
             {currentEvents.length > 0 && (
-              <div className="relative overflow-hidden bg-[#1A5276] rounded-4xl p-8 text-white shadow-xl mb-8">
-                {/* 背景雪花裝飾 */}
-                <div className="absolute -top-4 -right-4 opacity-20 text-7xl rotate-12">
-                  <i className="fas fa-snowflake"></i>
+              <div className="relative overflow-hidden bg-[#1A5276] rounded-[2.5rem] p-8 text-white shadow-2xl mb-8">
+                {/* 右上角裝飾 */}
+                <div className="absolute -top-6 -right-6 opacity-10 text-9xl rotate-12 pointer-events-none">
+                  <i className="fas fa-map-location-dot"></i>
                 </div>
 
                 <div className="relative z-10">
-                  <p className="text-[10px] font-black text-blue-200 uppercase tracking-[0.3em] mb-2 opacity-90">
-                    今日行程簡介 · Day {activeDay}
-                  </p>
-                  <h2 className="text-2xl font-black text-white leading-tight">
-                    {currentEvents.length >= 2
-                      ? `${currentEvents[0].location} → ${currentEvents[currentEvents.length - 1].location}`
-                      : `探索 ${currentEvents[0].location}`}
-                  </h2>
-                  <div className="mt-4">
-                    <span className="text-[10px] bg-white/20 backdrop-blur-md text-white border border-white/20 px-3 py-1.5 rounded-full font-bold uppercase tracking-widest">
-                      {currentEvents.length} Stops
+                  {/* 頂部輔助資訊 */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="bg-blue-400/30 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-white/10">
+                      今日行程簡介
                     </span>
+                    <p className="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em]">
+                      Day {activeDay}
+                    </p>
+                  </div>
+
+                  {/* 主標題：地區路徑 */}
+                  <h2 className="text-3xl font-black text-white leading-none mb-6 tracking-tighter">
+                    {currentEvents.length >= 2 &&
+                    travelRoute.start !== travelRoute.end ? (
+                      <div className="flex items-center gap-4">
+                        <span>{travelRoute.start}</span>
+                        <i className="fas fa-chevron-right text-lg text-blue-400/50"></i>
+                        <span>{travelRoute.end}</span>
+                      </div>
+                    ) : (
+                      `探索 ${travelRoute.start}`
+                    )}
+                  </h2>
+
+                  {/* 底部數據 */}
+                  <div className="flex items-center gap-4 text-blue-100/80">
+                    <div className="flex items-center gap-1.5">
+                      <i className="fas fa-flag-checkered text-[10px]"></i>
+                      <span className="text-[11px] font-black uppercase tracking-widest">
+                        {currentEvents.length} Stops
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -281,10 +371,12 @@ export default function App() {
                         {/* 操作按鈕 - 深色對比 */}
                         <div className="flex gap-2">
                           <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.location)}`}
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                              item.address || item.location,
+                            )}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="grow bg-[#1A5276] text-white text-[11px] py-4 rounded-2xl font-black text-center shadow-lg active:bg-blue-800 transition-colors uppercase tracking-widest flex items-center justify-center gap-2"
+                            className="grow bg-[#1A5276] text-white text-[11px] py-4 rounded-2xl font-black text-center shadow-lg active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
                           >
                             <i className="fas fa-directions"></i>
                             導航前往
