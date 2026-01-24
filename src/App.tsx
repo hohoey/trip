@@ -1,3 +1,5 @@
+import LZString from "lz-string";
+import { QRCodeSVG } from "qrcode.react";
 import { useState, useEffect, useMemo } from "react";
 import type { TripEvent } from "./types";
 import { useWeather } from "./hooks/useWeather";
@@ -83,6 +85,57 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("japan_trip_v1", JSON.stringify(schedule));
   }, [schedule]);
+
+  // 分享功能相關狀態
+  const [shareUrl, setShareUrl] = useState<string>("");
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+
+  // 偵測網址參數並匯入行程
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const importData = urlParams.get("import");
+    if (importData) {
+      try {
+        const decompressed =
+          LZString.decompressFromEncodedURIComponent(importData);
+        if (decompressed) {
+          const parsedData = JSON.parse(decompressed);
+          if (
+            confirm(
+              `發現分享行程 (共 ${parsedData.length} 筆)，是否要覆蓋現有資料？`,
+            )
+          ) {
+            setSchedule(parsedData);
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname,
+            );
+            alert("匯入成功！");
+          }
+        }
+      } catch (e) {
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+      }
+    }
+  }, []);
+
+  // 分享按鈕處理函式
+  const handleShareAction = () => {
+    if (schedule.length === 0) return alert("目前沒有行程可以分享");
+
+    // 壓縮資料並產生網址
+    const jsonStr = JSON.stringify(schedule);
+    const compressed = LZString.compressToEncodedURIComponent(jsonStr);
+    const url = `${window.location.origin}${window.location.pathname}?import=${compressed}`;
+
+    setShareUrl(url); // 更新 QR Code 使用的網址
+    setIsQRModalOpen(true); // 彈出視窗
+  };
 
   // 初始載入天氣
   useEffect(() => {
@@ -531,6 +584,29 @@ export default function App() {
               資料同步
             </h2>
 
+            {/* WhatsApp 分享區塊 */}
+            <div className="bg-white border border-emerald-100 rounded-[2.5rem] p-7 shadow-xl relative overflow-hidden mb-6">
+              <div className="relative z-10 text-center">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto mb-4">
+                  <i className="fab fa-whatsapp text-3xl"></i>
+                </div>
+                <h3 className="text-lg font-black text-slate-900 mb-1">
+                  隊友同步與分享
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6 text-center">
+                  Generate QR & Link
+                </p>
+
+                <button
+                  onClick={handleShareAction}
+                  className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black shadow-lg shadow-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-3"
+                >
+                  <i className="fas fa-qrcode"></i>
+                  產生分享 QR Code / 連結
+                </button>
+              </div>
+            </div>
+
             {/* 主管理面板 - 深色框架 */}
             <div className="bg-[#1A5276] rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
               {/* 裝飾背景 */}
@@ -627,6 +703,52 @@ export default function App() {
         onAdd={handleAddEvent}
         activeDay={activeDay}
       />
+      {isQRModalOpen && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-6 backdrop-blur-xl bg-slate-900/60 animate-fadeIn">
+          <div className="bg-white rounded-[3rem] p-8 w-full max-w-sm text-center shadow-2xl relative border border-white/20">
+            <h3 className="text-xl font-black text-slate-900 mb-1">
+              掃描以同步行程
+            </h3>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">
+              Scan with Camera
+            </p>
+
+            {/* QR Code 顯示區 */}
+            <div className="bg-white p-4 rounded-4xl inline-block mb-6 shadow-inner border border-slate-50">
+              <QRCodeSVG
+                value={shareUrl}
+                size={220}
+                level="L" // L級別能處理較多資料，且圖案較稀疏易掃
+              />
+            </div>
+
+            <div className="space-y-3">
+              {/* WhatsApp 分享按鈕 */}
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: "我的旅遊行程", url: shareUrl });
+                  } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    alert("已複製連結，請貼上到 WhatsApp");
+                  }
+                }}
+                className="w-full py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-sm flex items-center justify-center gap-2"
+              >
+                <i className="fab fa-whatsapp text-lg"></i> 傳送至 WhatsApp
+              </button>
+
+              {/* 關閉按鈕 */}
+              <button
+                onClick={() => setIsQRModalOpen(false)}
+                className="w-full py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-sm"
+              >
+                返回
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
